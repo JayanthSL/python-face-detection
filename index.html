@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Face Recognition Attendance</title>
+  </head>
+  <body>
+    <h1>Face Recognition Attendance System</h1>
+    <button id="markAttendance">Mark Attendance</button>
+    <div id="recognizedName">Recognized Name:</div>
+    <div id="video-container"></div>
+
+    <script
+      async
+      src="/static/opencv.js"
+      onload="onOpenCvReady();"
+      onerror="console.error('OpenCV.js failed to load');"
+    ></script>
+
+    <script>
+      let videoElement;
+      let canvasElement;
+      let context;
+
+      function onOpenCvReady() {
+        videoElement = document.createElement("video");
+        videoElement.autoplay = true;
+        canvasElement = document.createElement("canvas");
+        canvasElement.width = 640;
+        canvasElement.height = 480;
+        context = canvasElement.getContext("2d");
+
+        document.getElementById("video-container").appendChild(videoElement);
+        document.getElementById("video-container").appendChild(canvasElement);
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then(function (stream) {
+            videoElement.srcObject = stream;
+          })
+          .catch(function (err) {
+            console.error("Error accessing webcam: " + err);
+          });
+
+        const sse = new EventSource("/sse");
+
+        sse.onmessage = function (event) {
+          const data = JSON.parse(event.data);
+          const name = data.name;
+          const recognizedNameElement =
+            document.getElementById("recognizedName");
+          recognizedNameElement.innerText = "Recognized Name: " + name;
+        };
+      }
+    </script>
+  </body>
+</html>
